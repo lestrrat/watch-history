@@ -1,6 +1,9 @@
 # lestrrat's Watch History
 
 I'm a self-admitted video addict. Long before streaming services, I was addicted to TV shows -- I had it own 24/7.
+
+At some point I decided TV wasn't it any longer. I decided I needed to live and breathe YouTube. So I turned myself into a YouTube addict.
+
 Now that I watch a lot more YouTube/Netflix/Amazon Prime, and I realized I can use AI to compile a basic list for me
 I decided to give it a try.
 
