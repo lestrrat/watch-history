@@ -20,10 +20,10 @@ NAV_RE = re.compile(
     r"(?:\[Next →\]\((?P<next>[^)]+)\))?\Z"
 )
 ENTRY_RE = re.compile(
-    r"^1\. \[(?P<title>.*)\]\(https://www\.youtube\.com/watch\?v=(?P<video_id>[A-Za-z0-9_-]+)\)\Z"
+    r"^1\. \[(?P<title>.*)\]\(https://www\.youtube\.com/watch\?v=(?P<video_id>[A-Za-z0-9_-]{11})\)\Z"
 )
 NUMBERED_LINE_RE = re.compile(r"^\d+\.\s")
-VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]+\Z")
+VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}\Z")
 WEEKDAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 MONTHS = (
     "January",
@@ -145,6 +145,7 @@ def validate_daily_file(
     day: date,
     month_dir: Path,
     output_root: Path,
+    repository_root: Path | None,
     errors: list[str],
 ) -> int:
     text = read_utf8(path, errors)
@@ -166,11 +167,21 @@ def validate_daily_file(
     next_day = day + timedelta(days=1)
     previous_path = daily_path(output_root, previous_day)
     next_path = daily_path(output_root, next_day)
-    if previous_path.exists():
+    previous_repository_path = (
+        daily_path(repository_root, previous_day) if repository_root is not None else None
+    )
+    next_repository_path = (
+        daily_path(repository_root, next_day) if repository_root is not None else None
+    )
+    if previous_path.exists() or (
+        previous_repository_path is not None and previous_repository_path.exists()
+    ):
         expected_navigation.append(
             f"[← Previous]({relative_daily_link(month_dir, output_root, previous_day)})"
         )
-    if next_path.exists():
+    if next_path.exists() or (
+        next_repository_path is not None and next_repository_path.exists()
+    ):
         expected_navigation.append(f"[Next →]({relative_daily_link(month_dir, output_root, next_day)})")
     expected_navigation_line = " | ".join(expected_navigation)
 
@@ -221,10 +232,12 @@ def validate_daily_file(
     return entries
 
 
-def validate(month_dir: Path, mode: str) -> int:
+def validate(month_dir: Path, mode: str, repository_root: Path | None = None) -> int:
     errors: list[str] = []
     warnings: list[str] = []
     month_dir = month_dir.resolve()
+    if repository_root is not None:
+        repository_root = repository_root.resolve()
     target = parse_target(month_dir, errors)
     if target is None:
         for error in errors:
@@ -269,7 +282,14 @@ def validate(month_dir: Path, mode: str) -> int:
 
     entry_counts: dict[date, int] = {}
     for day, path in sorted(daily_files.items()):
-        entry_counts[day] = validate_daily_file(path, day, month_dir, output_root, errors)
+        entry_counts[day] = validate_daily_file(
+            path,
+            day,
+            month_dir,
+            output_root,
+            repository_root,
+            errors,
+        )
 
     no_entry_dates = [day for day in all_dates if day in daily_files and entry_counts.get(day, 0) == 0]
     total_entries = sum(entry_counts.values())
@@ -299,8 +319,13 @@ def main() -> int:
         default="draft",
         help="require every calendar-date file in draft mode; allow reviewed deletions in reviewed mode",
     )
+    parser.add_argument(
+        "--repository-root",
+        type=Path,
+        help="repository root used to validate navigation across draft-month boundaries",
+    )
     args = parser.parse_args()
-    return validate(args.month_dir, args.mode)
+    return validate(args.month_dir, args.mode, args.repository_root)
 
 
 if __name__ == "__main__":

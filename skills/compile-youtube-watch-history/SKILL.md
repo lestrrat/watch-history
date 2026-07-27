@@ -88,7 +88,7 @@ Do not add a title, prose, summary, or blank separator to the monthly README.
 Run the draft validator from the repository root:
 
 ```bash
-python3 skills/compile-youtube-watch-history/scripts/validate_watch_history.py outputs/YYYY/MM --mode draft
+python3 skills/compile-youtube-watch-history/scripts/validate_watch_history.py outputs/YYYY/MM --mode draft --repository-root .
 ```
 
 Fix every validation error and rerun it. Then manually confirm that the browser source was fully loaded, YouTube Music was excluded, titles were copied exactly, and the local-time date boundaries are supported.
@@ -113,7 +113,7 @@ Start this phase only after the user says the files are ready and asks to upload
 3. Run the reviewed-file validator:
 
    ```bash
-   python3 skills/compile-youtube-watch-history/scripts/validate_watch_history.py outputs/YYYY/MM --mode reviewed
+   python3 skills/compile-youtube-watch-history/scripts/validate_watch_history.py outputs/YYYY/MM --mode reviewed --repository-root .
    ```
 
 4. Report validation errors and stop if any exist. Missing daily files are reported as intentional review differences and are not restored.
@@ -152,3 +152,4 @@ Use `scripts/validate_watch_history.py` as the mechanical check for:
 - Per-date duplicate video IDs.
 
 Use `--mode draft` to require every calendar date's file. Use `--mode reviewed` to allow intentional deleted dates while still validating all remaining files.
+Pass `--repository-root .` when validating drafts so navigation at month boundaries also accounts for adjacent files already present in the repository.
