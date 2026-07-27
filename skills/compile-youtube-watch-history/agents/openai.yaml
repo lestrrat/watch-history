@@ -1,0 +1,4 @@
+interface:
+  display_name: "YouTube Watch History"
+  short_description: "Draft dated YouTube watch-history Markdown files"
+  default_prompt: "Use $compile-youtube-watch-history to compile a requested month of YouTube watch history into local Markdown drafts."
